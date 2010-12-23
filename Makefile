@@ -8,5 +8,6 @@ TARG=pure
 GOFILES=\
 	main.go\
 	types.go\
+	parse.go\
 
 include $(GOROOT)/src/Make.cmd
