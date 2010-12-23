@@ -5,13 +5,19 @@ type Func interface {
 	String() string
 }
 
-type raw string
+type char byte
 
-func (r raw) String() string { return string(r) }
+func (c char) String() string { return string(c) }
 
-func (r raw) apply(arg Func) Func {
-	return "`" + r + raw(arg.String())
+func (c char) apply(arg Func) Func { return pair{c, arg} }
+
+type pair [2]Func
+
+func (p pair) String() string {
+	return "`" + p[0].String() + p[1].String()
 }
+
+func (p pair) apply(arg Func) Func { return pair{p, arg} }
 
 type combinator uint8
 
