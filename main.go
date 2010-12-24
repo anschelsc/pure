@@ -28,6 +28,7 @@ func main() {
 			log.Exitln(err)
 		}
 	}
+	input = strip(input)
 	if !valid(input) {
 		log.Exitln("Syntax error.")
 	}
