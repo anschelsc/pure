@@ -28,6 +28,9 @@ func main() {
 			log.Exitln(err)
 		}
 	}
+	if !valid(input) {
+		log.Exitln("Syntax error.")
+	}
 	parsed := parse(input)
 	fmt.Println(parsed)
 }
