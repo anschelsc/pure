@@ -4,10 +4,10 @@ import (
 	"fmt"
 )
 
-var test = []string{"aa", "`aaa", "a`aa"}
+var test = []string{"a", "`ab", "`ka", "``kab", "`ix", "```sxyz"}
 
 func main() {
 	for _, s := range test {
-		fmt.Printf("%s\t%d\n", s, split([]byte(s)))
+		fmt.Printf("%s\t%s\n", s, parse([]byte(s)))
 	}
 }
