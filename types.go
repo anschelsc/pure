@@ -80,5 +80,5 @@ func (c s2) String() string {
 }
 
 func (c s2) apply(third Func) Func {
-	return c.first.apply(c.second).apply(c.first.apply(third))
+	return c.first.apply(third).apply(c.second.apply(third))
 }
