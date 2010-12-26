@@ -8,6 +8,10 @@ import (
 	"log"
 )
 
+var (
+	elim = flag.String("e", "", "Eliminate this (one-character) function.")
+)
+
 func main() {
 	flag.Parse()
 	var input []byte
@@ -32,7 +36,12 @@ func main() {
 	if !valid(input) {
 		log.Exitln("Syntax error.")
 	}
-	//	parsed := parse(input)
-	//	fmt.Println(parsed)
-	fmt.Println(eliminate(dumbParse(input), 'a'))
+	switch len(*elim) {
+	case 0:
+		fmt.Println(parse(input))
+	case 1:
+		fmt.Println(eliminate(dumbParse(input), char((*elim)[0])))
+	default:
+		log.Exitln("Argument to -e should be one-character.")
+	}
 }
