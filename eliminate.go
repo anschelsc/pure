@@ -9,14 +9,7 @@ type simple interface {
 func (c char) contains(other char) bool { return c == other }
 
 func (p pair) contains(c char) bool {
-	var first, second bool
-	if s, ok := p[0].(simple); ok {
-		first = s.contains(c)
-	}
-	if s, ok := p[1].(simple); ok {
-		second = s.contains(c)
-	}
-	return first || second
+	return p[0].(simple).contains(c) || p[1].(simple).contains(c)
 }
 
 func dumbParse(raw []byte) simple {
