@@ -66,7 +66,7 @@ type s1 struct {
 }
 
 func (c s1) String() string {
-	return "`" + c.first.String()
+	return "`s" + c.first.String()
 }
 
 func (c s1) apply(second Func) Func { return s2{c.first, second} }
@@ -76,7 +76,7 @@ type s2 struct {
 }
 
 func (c s2) String() string {
-	return "``" + c.first.String() + c.second.String()
+	return "``s" + c.first.String() + c.second.String()
 }
 
 func (c s2) apply(third Func) Func {
