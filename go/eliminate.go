@@ -6,16 +6,30 @@ type simple interface {
 	contains(char) bool
 }
 
+//Make char implement simple.
 func (c char) contains(other char) bool { return c == other }
 
-func (p pair) contains(c char) bool {
-	return p[0].(simple).contains(c) || p[1].(simple).contains(c)
+type simplePair [2]simple
+
+func (p simplePair) String() string {
+	return "`" + p[0].String() + p[1].String()
+}
+
+func (p simplePair) apply(arg Func) Func {
+	if s, ok := arg.(simple); ok { //Keep the simpleness if possible
+		return simplePair{p, s}
+	}
+	return pair{p, arg}
+}
+
+func (p simplePair) contains(c char) bool {
+	return p[0].contains(c) || p[1].contains(c)
 }
 
 func dumbParse(raw []byte) simple {
 	if raw[0] == '`' {
 		first, second := split(raw[1:])
-		return pair{dumbParse(first), dumbParse(second)}
+		return simplePair{dumbParse(first), dumbParse(second)}
 	}
 	return char(raw[0])
 }
@@ -27,9 +41,9 @@ func eliminate(f simple, c char) Func {
 	if !f.contains(c) {
 		return K.apply(f)
 	}
-	p := f.(pair) //safe since only pair and char implement simple, and char is always caught above
-	if second, ok := p[1].(char); ok && second == c && !p[0].(simple).contains(c) {
+	p := f.(simplePair) //safe since only simplePair and char implement simple, and char is always caught above
+	if second, ok := p[1].(char); ok && second == c && !p[0].contains(c) {
 		return p[0]
 	}
-	return S.apply(eliminate(p[0].(simple), c)).apply(eliminate(p[1].(simple), c))
+	return S.apply(eliminate(p[0], c)).apply(eliminate(p[1], c))
 }
