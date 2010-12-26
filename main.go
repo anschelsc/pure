@@ -36,12 +36,14 @@ func main() {
 	if !valid(input) {
 		log.Exitln("Syntax error.")
 	}
-	switch len(*elim) {
-	case 0:
+	if len(*elim) == 0 {
 		fmt.Println(parse(input))
-	case 1:
-		fmt.Println(eliminate(dumbParse(input), char((*elim)[0])))
-	default:
-		log.Exitln("Argument to -e should be one-character.")
+	} else {
+		input = []byte(parse(input).String())  //First we simplify.
+		for i := len(*elim) - 1; i >= 0; i-- { //Iterate backwards.
+			input = []byte(eliminate(dumbParse(input), char((*elim)[i])).String())
+			input = []byte(parse(input).String()) //Simplify after every step.
+		}
+		fmt.Println(string(input))
 	}
 }
