@@ -34,5 +34,5 @@ func main() {
 	}
 	//	parsed := parse(input)
 	//	fmt.Println(parsed)
-	fmt.Println(eliminate(dumbParse(input), 'a'))
+	fmt.Println(dumbParse(input))
 }
