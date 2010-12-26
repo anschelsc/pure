@@ -9,5 +9,6 @@ GOFILES=\
 	main.go\
 	types.go\
 	parse.go\
+	eliminate.go\
 
 include $(GOROOT)/src/Make.cmd

@@ -32,6 +32,7 @@ func main() {
 	if !valid(input) {
 		log.Exitln("Syntax error.")
 	}
-	parsed := parse(input)
-	fmt.Println(parsed)
+	//	parsed := parse(input)
+	//	fmt.Println(parsed)
+	fmt.Println(eliminate(dumbParse(input), 'a'))
 }
