@@ -22,15 +22,22 @@ apply (K1 x) _ = x
 apply x@(Simple _) y = Pair x y
 apply x@(Pair _ _) y = Pair x y
 
-validStart :: Int -> String -> Bool
-validStart 0 "" = True
-validStart _ "" = False
-validStart 0 _ = False
-validStart n ('`':xs) = validStart (n+1) xs
-validStart n (x:xs) = validStart (n-1) xs
-
 valid :: String -> Bool
-valid = validStart 1
+valid s = count s == Just 1
+
+up :: Int -> Maybe Int
+up x = Just (x+1)
+
+down :: Int -> Maybe Int
+down 1 = Nothing
+down x = Just (x-1)
+
+adjust :: Char -> Maybe Int -> Maybe Int
+adjust '`' acc = acc >>= down
+adjust c acc = acc >>= up
+
+count :: String -> Maybe Int
+count = foldr adjust (Just 0)
 
 splitStart :: Int -> String -> String -> (String, String)
 --left is reversed
