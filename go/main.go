@@ -19,22 +19,22 @@ func main() {
 		var err os.Error
 		input, err = ioutil.ReadAll(os.Stdin)
 		if err != nil {
-			log.Exitln(err)
+			log.Fatalln(err)
 		}
 	} else {
 		file, err := os.Open(flag.Arg(0), os.O_RDONLY, 0)
 		if err != nil {
-			log.Exitln(err)
+			log.Fatalln(err)
 		}
 		defer file.Close()
 		input, err = ioutil.ReadAll(file)
 		if err != nil {
-			log.Exitln(err)
+			log.Fatalln(err)
 		}
 	}
 	input = strip(input)
 	if !valid(input) {
-		log.Exitln("Syntax error.")
+		log.Fatalln("Syntax error.")
 	}
 	if len(*elim) == 0 {
 		fmt.Println(parse(input))
