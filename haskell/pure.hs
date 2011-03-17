@@ -1,6 +1,17 @@
 import Data.Char
 
-data Func = S | K | I | S1 Func | S2 Func Func | K1 Func | Simple Char | Pair Func Func deriving (Eq)
+main = do
+	raw <- getContents
+	let stripped = filter (not . isSpace) raw
+	if valid stripped
+		then print $ eval $ parse stripped
+		else putStrLn "Invalid program."
+
+data Tree = Tree Tree Tree | Leaf Char
+	deriving (Eq)
+
+data Func = S | K | I | S1 Func | S2 Func Func | K1 Func | Simple Char | Pair Func Func
+	deriving (Eq)
 
 instance Show Func where
 	show S = "s"
@@ -48,20 +59,17 @@ splitStart n left (x:right) = splitStart (n-1) (x:left) right
 split :: String -> (String, String)
 split = splitStart 1 ""
 
-parseChar :: Char -> Func
-parseChar 's' = S
-parseChar 'k' = K
-parseChar 'i' = I
-parseChar x = Simple x
+evalChar :: Char -> Func
+evalChar 's' = S
+evalChar 'k' = K
+evalChar 'i' = I
+evalChar x = Simple x
 
-parse :: String -> Func
-parse ('`':rest) = apply (parse $ fst splat) (parse $ snd splat)
+parse :: String -> Tree
+parse ('`':rest) = Tree (parse $ fst splat) (parse $ snd splat)
 	where splat = split rest
-parse [x] = parseChar x
+parse [x] = Leaf x
 
-main = do
-	raw <- getContents
-	let stripped = filter (not . isSpace) raw
-	if valid stripped
-		then print $ parse stripped
-		else putStrLn "Invalid program."
+eval :: Tree -> Func
+eval (Tree left right) = apply (eval left) (eval right)
+eval (Leaf x) = evalChar x
