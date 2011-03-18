@@ -23,6 +23,10 @@ instance Show Func where
 	show (Simple c) = [c]
 	show (Pair x y) = "`" ++ show x ++ show y
 
+instance Show Tree where
+	show (Tree left right) = "`" ++ show left ++ show right
+	show (Leaf c) = [c]
+
 apply :: Func -> Func -> Func
 apply S x = S1 x
 apply K x = K1 x
@@ -73,3 +77,16 @@ parse [x] = Leaf x
 eval :: Tree -> Func
 eval (Tree left right) = apply (eval left) (eval right)
 eval (Leaf x) = evalChar x
+
+has :: Tree -> Char -> Bool
+(Leaf x) `has` y = x==y
+(Tree left right) `has` c = (left `has` c) || (right `has` c)
+
+elim :: Char -> Tree -> Tree
+elim c (Leaf d)
+	| c==d = Leaf 'i'
+elim c (Tree left (Leaf d))
+	| (c==d) && (not $ left `has` c) = left
+elim c t
+	| not $ t `has` c = Tree (Leaf 'k') t
+elim c (Tree left right) = Tree (Tree (Leaf 's') $ elim c left) $ elim c right
