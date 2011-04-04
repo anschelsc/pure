@@ -1,10 +1,15 @@
 import Data.Char
+import System (getArgs)
 
 main = do
 	raw <- getContents
+	args <- getArgs
 	let stripped = filter (not . isSpace) raw
 	if valid stripped
-		then print $ eval $ parse stripped
+		then
+			if null args
+				then print $ eval $ parse stripped
+				else print $ foldr elim (parse stripped) $ args !! 0
 		else putStrLn "Invalid program."
 
 data Tree = Tree Tree Tree | Leaf Char
