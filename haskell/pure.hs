@@ -1,11 +1,12 @@
 import Data.Char
+import Text.ParserCombinators.Parsec
 
 main = do
 	raw <- getContents
 	let stripped = filter (not . isSpace) raw
-	if valid stripped
-		then print $ eval $ parse stripped
-		else putStrLn "Invalid program."
+	case parse parser "" stripped of
+		Right tree -> print $ eval tree
+		Left err -> putStrLn $ "Parse error at " ++ show err
 
 data Tree = Tree Tree Tree | Leaf Char
 	deriving (Eq)
@@ -37,42 +38,24 @@ apply (K1 x) _ = x
 apply x@(Simple _) y = Pair x y
 apply x@(Pair _ _) y = Pair x y
 
-valid :: String -> Bool
-valid s = count s == Just 1
+parser' :: Parser Tree
+parser' = do
+		char '`'
+		left <- parser'
+		right <- parser'
+		return $ Tree left right
+	<|> (letter >>= return . Leaf)
 
-up :: Int -> Maybe Int
-up x = Just (x+1)
-
-down :: Int -> Maybe Int
-down 1 = Nothing
-down x = Just (x-1)
-
-adjust :: Char -> Maybe Int -> Maybe Int
-adjust '`' acc = acc >>= down
-adjust c acc = acc >>= up
-
-count :: String -> Maybe Int
-count = foldr adjust (Just 0)
-
-splitStart :: Int -> String -> String -> (String, String)
---left is reversed
-splitStart 0 left right = (reverse left, right)
-splitStart n left ('`':right) = splitStart (n+1) ('`':left) right
-splitStart n left (x:right) = splitStart (n-1) (x:left) right
-
-split :: String -> (String, String)
-split = splitStart 1 ""
+parser = do
+		tree <- parser'
+		eof
+		return tree
 
 evalChar :: Char -> Func
 evalChar 's' = S
 evalChar 'k' = K
 evalChar 'i' = I
 evalChar x = Simple x
-
-parse :: String -> Tree
-parse ('`':rest) = Tree (parse $ fst splat) (parse $ snd splat)
-	where splat = split rest
-parse [x] = Leaf x
 
 eval :: Tree -> Func
 eval (Tree left right) = apply (eval left) (eval right)
