@@ -1,11 +1,15 @@
 import Data.Char
 import Text.ParserCombinators.Parsec
+import System (getArgs)
 
 main = do
 	raw <- getContents
+	args <- getArgs
 	let stripped = filter (not . isSpace) raw
 	case parse parser "" stripped of
-		Right tree -> print $ eval tree
+		Right tree -> if null args
+			then print $ eval tree
+			else print $ foldr elim tree $ args !! 0
 		Left err -> putStrLn $ "Parse error at " ++ show err
 
 data Tree = Tree Tree Tree | Leaf Char
