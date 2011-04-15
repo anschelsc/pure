@@ -22,7 +22,7 @@ func main() {
 			log.Fatalln(err)
 		}
 	} else {
-		file, err := os.Open(flag.Arg(0), os.O_RDONLY, 0)
+		file, err := os.Open(flag.Arg(0))
 		if err != nil {
 			log.Fatalln(err)
 		}
