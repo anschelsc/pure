@@ -6,9 +6,9 @@ include $(GOROOT)/src/Make.inc
 
 TARG=pure
 GOFILES=\
-	main.go\
 	types.go\
 	parse.go\
-	eliminate.go\
+	elim.go\
+	main.go\
 
 include $(GOROOT)/src/Make.cmd

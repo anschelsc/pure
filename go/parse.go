@@ -1,66 +1,53 @@
 package main
 
-func strip(raw []byte) []byte {
-	ret := make([]byte, 0, len(raw))
-	for i := 0; i != len(raw); i++ {
-		switch raw[i] {
-		case '\t', '\n', '\v', '\f', '\r', ' ', 0x85, 0xA0: //copied from unicode.IsSpace()
-			continue
-		default:
-			ret = append(ret, raw[i])
-		}
-	}
-	return ret
+import (
+	"os"
+	"bytes"
+)
+
+var (
+	ErrSyntax = os.NewError("Syntax error.")
+)
+
+var whiteSpace = map[byte]bool{
+	'\t': true,
+	'\n': true,
+	'\v': true,
+	'\f': true,
+	'\r': true,
+	' ':  true,
+	0x85: true,
+	0xA0: true,
 }
 
-func valid(raw []byte) bool {
-	count := 1
-	for i := 0; i != len(raw); i++ {
-		if count == 0 {
-			return false
+func Parse(s []byte) (p Piece, e os.Error) {
+	defer func() {
+		x := recover()
+		if err, ok := x.(os.Error); ok {
+			p = nil
+			e = err
+		} else if x != nil {
+			panic(x)
 		}
-		if raw[i] == '`' {
-			count++
-		} else {
-			count--
-		}
+	}()
+	p, rest := parse(s)
+	if len(rest) != 0 && len(bytes.TrimSpace(rest)) != 0 {
+		e = ErrSyntax
 	}
-	return count == 0
+	return
 }
 
-//Pass this a two-function slice; it returns the index of the border.
-func border(raw []byte) int {
-	count := 1
-	for i := 0; i != len(raw); i++ {
-		if count == 0 {
-			return i
-		}
-		if raw[i] == '`' {
-			count++
-		} else {
-			count--
-		}
+func parse(s []byte) (Piece, []byte) {
+	if len(s) == 0 {
+		panic(ErrSyntax)
 	}
-	return -1
-}
-
-func split(raw []byte) ([]byte, []byte) {
-	i := border(raw)
-	return raw[:i], raw[i:]
-}
-
-//parse(raw) assumes that raw is valid().
-func parse(raw []byte) Func {
-	switch raw[0] {
-	case '`':
-		first, second := split(raw[1:])
-		return parse(first).apply(parse(second))
-	case 's':
-		return S
-	case 'k':
-		return K
-	case 'i':
-		return I
+	if whiteSpace[s[0]] {
+		return parse(s[1:])
 	}
-	return char(raw[0])
+	if s[0] == '`' {
+		left, s := parse(s[1:])
+		right, s := parse(s)
+		return Pair{left, right}, s
+	}
+	return Char(s[0]), s[1:]
 }

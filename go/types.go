@@ -1,84 +1,87 @@
 package main
 
-type Func interface {
-	apply(Func) Func
+import (
+	"fmt"
+)
+
+type Piece interface {
+	Eval() Func
 	String() string
 }
 
-type char byte
-
-func (c char) String() string { return string(c) }
-
-func (c char) apply(arg Func) Func { return pair{c, arg} }
-
-type pair [2]Func
-
-func (p pair) String() string {
-	return "`" + p[0].String() + p[1].String()
+type Func interface {
+	Apply(Piece) Func
+	Defuse() Piece
 }
 
-func (p pair) apply(arg Func) Func { return pair{p, arg} }
+type Char byte
 
-type combinator uint8
+func (c Char) String() string { return string(c) }
 
-const (
-	S combinator = iota
-	K
-	I
-)
-
-func (c combinator) String() string {
+func (c Char) Eval() Func {
 	switch c {
-	case S:
-		return "s"
-	case K:
-		return "k"
-	case I:
-		return "i"
+	case 's':
+		return S{}
+	case 'k':
+		return K{}
+	case 'i':
+		return I{}
 	}
-	return ""
+	return Block{c}
 }
 
-func (c combinator) apply(arg Func) Func {
-	switch c {
-	case I:
-		return arg
-	case K:
-		return k1{arg}
-	case S:
-		return s1{arg}
-	}
-	return nil
+type Pair [2]Piece
+
+func (p Pair) String() string { return fmt.Sprintf("`%s%s", p[0], p[1]) }
+
+func (p Pair) Eval() Func { return p[0].Eval().Apply(p[1]) }
+
+type S struct{}
+
+func (s S) Apply(p Piece) Func { return S1{p} }
+
+func (s S) Defuse() Piece { return Char('s') }
+
+type S1 struct {
+	x Piece
 }
 
-type k1 struct {
-	arg Func
+func (s S1) Apply(y Piece) Func { return S2{s.x, y} }
+
+func (s S1) Defuse() Piece { return Pair{Char('s'), s.x} }
+
+type S2 struct {
+	x, y Piece
 }
 
-func (c k1) String() string {
-	return "`k" + c.arg.String()
+func (s S2) Apply(z Piece) Func { return s.x.Eval().Apply(z).Apply(Pair{s.y, z}) }
+
+func (s S2) Defuse() Piece { return Pair{Pair{Char('s'), s.x}, s.y} }
+
+type K struct{}
+
+func (k K) Apply(p Piece) Func { return K1{p} }
+
+func (k K) Defuse() Piece { return Char('k') }
+
+type K1 struct {
+	p Piece
 }
 
-func (c k1) apply(_ Func) Func { return c.arg }
+func (k K1) Apply(_ Piece) Func { return k.p.Eval() }
 
-type s1 struct {
-	first Func
+func (k K1) Defuse() Piece { return Pair{Char('k'), k.p} }
+
+type I struct{}
+
+func (i I) Apply(p Piece) Func { return p.Eval() }
+
+func (i I) Defuse() Piece { return Char('i') }
+
+type Block struct {
+	p Piece
 }
 
-func (c s1) String() string {
-	return "`s" + c.first.String()
-}
+func (b Block) Apply(p Piece) Func { return Block{Pair{b.p, p}} }
 
-func (c s1) apply(second Func) Func { return s2{c.first, second} }
-
-type s2 struct {
-	first, second Func
-}
-
-func (c s2) String() string {
-	return "``s" + c.first.String() + c.second.String()
-}
-
-func (c s2) apply(third Func) Func {
-	return c.first.apply(third).apply(c.second.apply(third))
-}
+func (b Block) Defuse() Piece { return b.p }
