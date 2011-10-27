@@ -1,49 +1,36 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"io/ioutil"
+	"bufio"
+	"fmt"
 	"flag"
-	"log"
 )
 
 var (
-	elim = flag.String("e", "", "Eliminate this (one-character) function.")
+	elims = flag.String("e", "", "Eliminate these (one-character) functions.")
+	input *os.File
 )
 
 func main() {
 	flag.Parse()
-	var input []byte
 	if flag.NArg() == 0 {
+		input = os.Stdin
+	} else {
 		var err os.Error
-		input, err = ioutil.ReadAll(os.Stdin)
+		input, err = os.Open(flag.Arg(0))
 		if err != nil {
-			log.Fatalln(err)
-		}
-	} else {
-		file, err := os.Open(flag.Arg(0))
-		if err != nil {
-			log.Fatalln(err)
-		}
-		defer file.Close()
-		input, err = ioutil.ReadAll(file)
-		if err != nil {
-			log.Fatalln(err)
+			fmt.Fprintln(os.Stderr, err)
+			return
 		}
 	}
-	input = strip(input)
-	if !valid(input) {
-		log.Fatalln("Syntax error.")
+	p, e := Parse(bufio.NewReader(input))
+	if e != nil {
+		fmt.Fprintln(os.Stderr, e)
+		return
 	}
-	if len(*elim) == 0 {
-		fmt.Println(parse(input))
-	} else {
-		input = []byte(parse(input).String())  //First we simplify.
-		for i := len(*elim) - 1; i >= 0; i-- { //Iterate backwards.
-			input = []byte(eliminate(dumbParse(input), char((*elim)[i])).String())
-			input = []byte(parse(input).String()) //Simplify after every step.
-		}
-		fmt.Println(string(input))
+	for i := len(*elims) - 1; i >= 0; i-- { // NOP if *elims==""
+		p = eliminate(p, Char((*elims)[i]))
 	}
+	fmt.Println(p.Eval().Defuse())
 }

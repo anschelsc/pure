@@ -1,66 +1,46 @@
 package main
 
-func strip(raw []byte) []byte {
-	ret := make([]byte, 0, len(raw))
-	for i := 0; i != len(raw); i++ {
-		switch raw[i] {
-		case '\t', '\n', '\v', '\f', '\r', ' ', 0x85, 0xA0: //copied from unicode.IsSpace()
-			continue
-		default:
-			ret = append(ret, raw[i])
-		}
-	}
-	return ret
+import (
+	"os"
+	"io"
+)
+
+var (
+	ErrSyntax = os.NewError("Syntax error.")
+)
+
+var whiteSpace = map[byte]bool{
+	'\t': true,
+	'\n': true,
+	'\v': true,
+	'\f': true,
+	'\r': true,
+	' ':  true,
+	0x85: true,
+	0xA0: true,
 }
 
-func valid(raw []byte) bool {
-	count := 1
-	for i := 0; i != len(raw); i++ {
-		if count == 0 {
-			return false
-		}
-		if raw[i] == '`' {
-			count++
-		} else {
-			count--
-		}
+func Parse(r io.ByteReader) (Piece, os.Error) {
+	b, err := r.ReadByte()
+	for err == nil && whiteSpace[b] {
+		b, err = r.ReadByte()
 	}
-	return count == 0
-}
-
-//Pass this a two-function slice; it returns the index of the border.
-func border(raw []byte) int {
-	count := 1
-	for i := 0; i != len(raw); i++ {
-		if count == 0 {
-			return i
+	if err != nil {
+		if err == os.EOF {
+			return nil, ErrSyntax
 		}
-		if raw[i] == '`' {
-			count++
-		} else {
-			count--
+		return nil, err
+	}
+	if b == '`' {
+		left, err := Parse(r)
+		if err != nil {
+			return nil, err
 		}
+		right, err := Parse(r)
+		if err != nil {
+			return nil, err
+		}
+		return Pair{left, right}, nil
 	}
-	return -1
-}
-
-func split(raw []byte) ([]byte, []byte) {
-	i := border(raw)
-	return raw[:i], raw[i:]
-}
-
-//parse(raw) assumes that raw is valid().
-func parse(raw []byte) Func {
-	switch raw[0] {
-	case '`':
-		first, second := split(raw[1:])
-		return parse(first).apply(parse(second))
-	case 's':
-		return S
-	case 'k':
-		return K
-	case 'i':
-		return I
-	}
-	return char(raw[0])
+	return Char(b), nil
 }
