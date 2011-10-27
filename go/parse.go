@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"bytes"
+	"io"
 )
 
 var (
@@ -20,34 +20,27 @@ var whiteSpace = map[byte]bool{
 	0xA0: true,
 }
 
-func Parse(s []byte) (p Piece, e os.Error) {
-	defer func() {
-		x := recover()
-		if err, ok := x.(os.Error); ok {
-			p = nil
-			e = err
-		} else if x != nil {
-			panic(x)
+func Parse(r io.ByteReader) (Piece, os.Error) {
+	b, err := r.ReadByte()
+	for err == nil && whiteSpace[b] {
+		b, err = r.ReadByte()
+	}
+	if err != nil {
+		if err == os.EOF {
+			return nil, ErrSyntax
 		}
-	}()
-	p, rest := parse(s)
-	if len(rest) != 0 && len(bytes.TrimSpace(rest)) != 0 {
-		e = ErrSyntax
+		return nil, err
 	}
-	return
-}
-
-func parse(s []byte) (Piece, []byte) {
-	if len(s) == 0 {
-		panic(ErrSyntax)
+	if b == '`' {
+		left, err := Parse(r)
+		if err != nil {
+			return nil, err
+		}
+		right, err := Parse(r)
+		if err != nil {
+			return nil, err
+		}
+		return Pair{left, right}, nil
 	}
-	if whiteSpace[s[0]] {
-		return parse(s[1:])
-	}
-	if s[0] == '`' {
-		left, s := parse(s[1:])
-		right, s := parse(s)
-		return Pair{left, right}, s
-	}
-	return Char(s[0]), s[1:]
+	return Char(b), nil
 }

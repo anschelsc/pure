@@ -2,15 +2,14 @@ package main
 
 import (
 	"os"
-	"io/ioutil"
+	"bufio"
 	"fmt"
 )
 
 func main() {
-	raw, _ := ioutil.ReadAll(os.Stdin)
-	p,e := Parse(raw)
-	if e!=nil {
-		fmt.Println(e)
+	p, e := Parse(bufio.NewReader(os.Stdin))
+	if e != nil {
+		fmt.Fprintln(os.Stderr, e)
 		return
 	}
 	fmt.Println(p.Eval().Defuse())
