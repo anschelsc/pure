@@ -17,7 +17,7 @@ subdirectory.
 Author
 ------
 
-Everything in this directory is (c) 2010 Anschel Schaffer-Cohen, 
+Everything in this directory is (c) 2011 Anschel Schaffer-Cohen, 
 <anschelsc@gmail.com>, and licensed under the BSD-style license in the LICENSE 
 file. If you want to contribute and/or comment, feel free to do so via 
 [Github][2] or by sending me email.
