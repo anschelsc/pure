@@ -60,24 +60,23 @@ AST *combine(AST *left, AST *right) {
 	return ret;
 }
 
-Func *eval(AST *a) {
-	Func *ret;
+Func eval(AST *a) {
+	Func ret;
 	switch (a->type) {
 	case CHAR:
-		ret = (Func *) malloc(sizeof(Func));
 		switch (a->val.c) {
 		case 's':
-			ret->type = S;
+			ret.apply = &apply_s;
 			break;
 		case 'k':
-			ret->type = K;
+			ret.apply = &apply_k;
 			break;
 		case 'i':
-			ret->type = I;
+			ret.apply = &apply_i;
 			break;
 		default:
-			ret->type = BLOCK;
-			ret->val.block = a;
+			ret.apply = &apply_block;
+			ret.data = a;
 			break;
 		}
 		break;
@@ -88,60 +87,61 @@ Func *eval(AST *a) {
 	return ret;
 }
 
-AST *freeze(Func *f) {
-	switch (f->type) {
-	case BLOCK:
-		return f->val.block;
-	case S:
+AST *freeze(Func f) {
+	if (f.apply == &apply_block)
+		return f.data;
+	if (f.apply == &apply_s)
 		return from_char('s');
-	case S1:
-		return combine(from_char('s'), f->val.s1.x);
-	case S2:
-		return combine(combine(from_char('s'), f->val.s2.x), f->val.s2.y);
-	case K:
-		return from_char('k');
-	case K1:
-		return combine(from_char('k'), f->val.k1.x);
-	case I:
-		return from_char('i');
+	if (f.apply == &apply_s1)
+		return combine(from_char('s'), f.data);
+	if (f.apply == &apply_s2) {
+		AST **pair = f.data;
+		return combine(combine(from_char('s'), pair[0]), pair[1]);
 	}
+	if (f.apply == &apply_k)
+		return from_char('k');
+	if (f.apply == &apply_k1)
+		return combine(from_char('k'), f.data);
+	if (f.apply == &apply_i)
+		return from_char('i');
 	//CAN'T HAPPEN
 	return NULL;
 }
 
-Func *apply(Func *left, AST *right) {
-	Func *ret;
-	switch (left->type) {
-	case BLOCK:
-		ret = (Func *) malloc(sizeof(Func));
-		ret->type = BLOCK;
-		ret->val.block = combine(left->val.block, right);
-		break;
-	case S:
-		ret = (Func *) malloc(sizeof(Func));
-		ret->type = S1;
-		ret->val.s1.x = right;
-		break;
-	case S1:
-		ret = (Func *) malloc(sizeof(Func));
-		ret->type = S2;
-		ret->val.s2.x = left->val.s1.x;
-		ret->val.s2.y = right;
-		break;
-	case S2:
-		ret = apply(apply(eval(left->val.s2.x), right), combine(left->val.s2.y, right));
-		break;
-	case K:
-		ret = (Func *) malloc(sizeof(Func));
-		ret->type = K1;
-		ret->val.k1.x = right;
-		break;
-	case K1:
-		ret = eval(left->val.k1.x);
-		break;
-	case I:
-		ret = eval(right);
-		break;
-	}
+Func apply(Func left, AST *right) {
+	return (*left.apply)(left.data, right);
+}
+
+Func apply_block(void *left, AST *right) {
+	Func ret = {combine(left, right), &apply_block};
 	return ret;
+}
+
+Func apply_s(void *_, AST *x) {
+	Func ret = {x, &apply_s1};
+	return ret;
+}
+
+Func apply_s1(void *x, AST *y) {
+	AST *pair[2] = {x, y};
+	Func ret = {pair, &apply_s2};
+	return ret;
+}
+
+Func apply_s2(void *data, AST *z) {
+	AST **pair = data;
+	return apply(apply(eval(pair[0]), z), combine(pair[1], z));
+}
+
+Func apply_k(void *_, AST *x) {
+	Func ret = {x, &apply_k1};
+	return ret;
+}
+
+Func apply_k1(void *x, AST *_) {
+	return eval((AST *)x);
+}
+
+Func apply_i(void *_, AST *x) {
+	return eval(x);
 }

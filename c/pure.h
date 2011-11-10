@@ -16,34 +16,28 @@ typedef struct AST_S {
 	} val;
 } AST;
 
-enum Func_t { BLOCK, S, S1, S2, K, K1, I };
-
-typedef struct {
-	enum Func_t type;
-	union {	//We don't need any data if type is S, K, or I
-		AST *block;
-		struct {
-			AST *x;
-		} s1;
-		struct {
-			AST *x;
-			AST *y;
-		} s2;
-		struct {
-			AST *x;
-		} k1;
-	} val;
+typedef struct Func_S {
+	void *data;
+	struct Func_S (*apply)(void *, AST *);
 } Func;
+
+Func apply_block(void *, AST *);
+Func apply_s(void *, AST *);
+Func apply_s1(void *, AST *);
+Func apply_s2(void *, AST *);
+Func apply_k(void *, AST *);
+Func apply_k1(void *, AST *);
+Func apply_i(void *, AST *);
 
 void fprint(FILE *, AST *);
 
 AST *from_char(char);
 AST *combine(AST *, AST *);
 
-Func *eval(AST *);
-AST *freeze(Func *);
+Func eval(AST *);
+AST *freeze(Func);
 
-Func *apply(Func *, AST *);
+Func apply(Func, AST *);
 
 AST *parse(FILE *);
 
