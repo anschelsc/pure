@@ -68,11 +68,11 @@ char k single kast !
 char i single iast !
 
 variable vcount
-0 vcount !
+: reset ( --) 0 vcount ! ;
 : ensure ( --) vcount @ 0< abort" Syntax error." ;
 : up ( --) 1 vcount +! ;
 : down ( --) -1 vcount +! ensure ;
 : end-check ( --) vcount @ 1- abort" Syntax error." ;
 
 : consume ( adr -- ast) c@ dup [char] ` = if down drop pair exit then up single ;
-: parse ( adr count -- ast) over + 1- do i consume -1 +loop end-check ;
+: parse ( adr count -- ast) reset over + 1- do i consume -1 +loop end-check ;
