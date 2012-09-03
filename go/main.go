@@ -17,7 +17,7 @@ func main() {
 	if flag.NArg() == 0 {
 		input = os.Stdin
 	} else {
-		var err os.Error
+		var err error
 		input, err = os.Open(flag.Arg(0))
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)

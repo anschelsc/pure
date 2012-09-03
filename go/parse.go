@@ -1,12 +1,12 @@
 package main
 
 import (
-	"os"
+	"errors"
 	"io"
 )
 
 var (
-	ErrSyntax = os.NewError("Syntax error.")
+	ErrSyntax = errors.New("Syntax error.")
 )
 
 var whiteSpace = map[byte]bool{
@@ -20,13 +20,13 @@ var whiteSpace = map[byte]bool{
 	0xA0: true,
 }
 
-func Parse(r io.ByteReader) (Piece, os.Error) {
+func Parse(r io.ByteReader) (Piece, error) {
 	b, err := r.ReadByte()
 	for err == nil && whiteSpace[b] {
 		b, err = r.ReadByte()
 	}
 	if err != nil {
-		if err == os.EOF {
+		if err == io.EOF {
 			return nil, ErrSyntax
 		}
 		return nil, err
