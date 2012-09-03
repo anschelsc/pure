@@ -109,7 +109,7 @@ AST *freeze(Func f) {
 }
 
 Func apply(Func left, AST *right) {
-	return (*left.apply)(left.data, right);
+	return left.apply(left.data, right);
 }
 
 Func apply_block(void *left, AST *right) {
