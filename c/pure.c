@@ -46,14 +46,14 @@ void fprint(FILE *f, AST *a) {
 }
 
 AST *from_char(char c) {
-	AST *ret = (AST *) malloc(sizeof(AST));
+	AST *ret = malloc(sizeof(AST));
 	ret->type = CHAR;
 	ret->val.c = c;
 	return ret;
 }
 
 AST *combine(AST *left, AST *right) {
-	AST *ret = (AST *) malloc(sizeof(AST));
+	AST *ret = malloc(sizeof(AST));
 	ret->type = PAIR;
 	ret->val.pair.left = left;
 	ret->val.pair.right = right;
