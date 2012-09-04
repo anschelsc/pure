@@ -16,18 +16,25 @@ typedef struct AST_S {
 	} val;
 } AST;
 
+typedef union {
+	AST *single;
+	struct {
+		AST *left, *right;
+	} pair;
+} FData;
+
 typedef struct Func_S {
-	void *data;
-	struct Func_S (*apply)(void *, AST *);
+	FData data;
+	struct Func_S (*apply)(FData, AST *);
 } Func;
 
-Func apply_block(void *, AST *);
-Func apply_s(void *, AST *);
-Func apply_s1(void *, AST *);
-Func apply_s2(void *, AST *);
-Func apply_k(void *, AST *);
-Func apply_k1(void *, AST *);
-Func apply_i(void *, AST *);
+Func apply_block(FData, AST *);
+Func apply_s(FData, AST *);
+Func apply_s1(FData, AST *);
+Func apply_s2(FData, AST *);
+Func apply_k(FData, AST *);
+Func apply_k1(FData, AST *);
+Func apply_i(FData, AST *);
 
 void fprint(FILE *, AST *);
 

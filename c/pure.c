@@ -76,7 +76,7 @@ Func eval(AST *a) {
 			break;
 		default:
 			ret.apply = &apply_block;
-			ret.data = a;
+			ret.data.single = a;
 			break;
 		}
 		break;
@@ -89,19 +89,18 @@ Func eval(AST *a) {
 
 AST *freeze(Func f) {
 	if (f.apply == &apply_block)
-		return f.data;
+		return f.data.single;
 	if (f.apply == &apply_s)
 		return from_char('s');
 	if (f.apply == &apply_s1)
-		return combine(from_char('s'), f.data);
+		return combine(from_char('s'), f.data.single);
 	if (f.apply == &apply_s2) {
-		AST **pair = f.data;
-		return combine(combine(from_char('s'), pair[0]), pair[1]);
+		return combine(combine(from_char('s'), f.data.pair.left), f.data.pair.right);
 	}
 	if (f.apply == &apply_k)
 		return from_char('k');
 	if (f.apply == &apply_k1)
-		return combine(from_char('k'), f.data);
+		return combine(from_char('k'), f.data.single);
 	if (f.apply == &apply_i)
 		return from_char('i');
 	//CAN'T HAPPEN
@@ -112,36 +111,38 @@ Func apply(Func left, AST *right) {
 	return left.apply(left.data, right);
 }
 
-Func apply_block(void *left, AST *right) {
-	Func ret = {combine(left, right), &apply_block};
+Func apply_block(FData data, AST *right) {
+	Func ret = {combine(data.single, right), &apply_block};
 	return ret;
 }
 
-Func apply_s(void *_, AST *x) {
+Func apply_s(FData _, AST *x) {
 	Func ret = {x, &apply_s1};
 	return ret;
 }
 
-Func apply_s1(void *x, AST *y) {
-	AST *pair[2] = {x, y};
-	Func ret = {pair, &apply_s2};
+Func apply_s1(FData data, AST *y) {
+	data.pair.left = data.single;
+	data.pair.right = y;
+	Func ret = {data, &apply_s2};
 	return ret;
 }
 
-Func apply_s2(void *data, AST *z) {
-	AST **pair = data;
-	return apply(apply(eval(pair[0]), z), combine(pair[1], z));
+Func apply_s2(FData data, AST *z) {
+	return apply(apply(eval(data.pair.left), z), combine(data.pair.right, z));
 }
 
-Func apply_k(void *_, AST *x) {
-	Func ret = {x, &apply_k1};
+Func apply_k(FData _, AST *x) {
+	FData data;
+	data.single = x;
+	Func ret = {data, &apply_k1};
 	return ret;
 }
 
-Func apply_k1(void *x, AST *_) {
-	return eval((AST *)x);
+Func apply_k1(FData data, AST *_) {
+	return eval(data.single);
 }
 
-Func apply_i(void *_, AST *x) {
+Func apply_i(FData _, AST *x) {
 	return eval(x);
 }
