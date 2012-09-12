@@ -157,6 +157,7 @@ void ascend(void) {
 
 void descend(void) {
 	path *newp = malloc(sizeof *newp);
+	assert(newp);
 	newp->up = pc;
 	newp->here = pc->here->data.t.left;
 	pc = newp;
