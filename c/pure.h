@@ -1,51 +1,40 @@
-#ifndef PURE
-#define PURE
-
 #include <stdio.h>
 
-enum AST_t { CHAR, PAIR };
-
-typedef struct AST_S {
-	enum AST_t type;
+typedef struct ast {
+	char is_node;
 	union {
 		char c;
 		struct {
-			struct AST_S *left;
-			struct AST_S *right;
-		} pair;
-	} val;
-} AST;
+			struct ast *left, *right;
+		} t;
+	} data;
+	size_t count;
+} ast;
 
-typedef union {
-	AST *single;
-	struct {
-		AST *left, *right;
-	} pair;
-} FData;
+ast *leaf(char);
+ast *node(ast *, ast *);
 
-typedef struct Func_S {
-	FData data;
-	struct Func_S (*apply)(FData, AST *);
-} Func;
+void release(ast *);
 
-Func apply_block(FData, AST *);
-Func apply_s(FData, AST *);
-Func apply_s1(FData, AST *);
-Func apply_s2(FData, AST *);
-Func apply_k(FData, AST *);
-Func apply_k1(FData, AST *);
-Func apply_i(FData, AST *);
+ast *parse(FILE *);
+void output(FILE *, ast *);
 
-void fprint(FILE *, AST *);
+typedef struct path {
+	ast *here;
+	struct path *up;
+} path;
 
-AST *from_char(char);
-AST *combine(AST *, AST *);
+// To travel the path:
+void ascend(void);
+void descend(void);
 
-Func eval(AST *);
-AST *freeze(Func);
+// Change the current ast
+void replace(ast *);
 
-Func apply(Func, AST *);
-
-AST *parse(FILE *);
-
-#endif
+void f_raw(void);
+void f_s(void);
+void f_s1(void);
+void f_s2(void);
+void f_k(void);
+void f_k1(void);
+void f_i(void);
